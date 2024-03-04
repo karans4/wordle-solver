@@ -46,7 +46,7 @@ read yellows
 yellows=`echo "$yellows" | tr '[:upper:]' '[:lower:]'`
 if echo $yellows | grep -E " *([a-z] )* *$"
 then
-    continue
+    :
 else
     echo "Invalid pattern: $yellow"
     echo "Must be letters seperated by spaces"
@@ -60,7 +60,7 @@ read grays
 grays=`echo "$grays" | tr '[:upper:]' '[:lower:]'`
 if echo $grays | grep -E " *([a-z] )* *$"
 then
-    continue
+    :
 else
     echo "Invalid pattern: $grays"
     echo "Must be letters seperated by spaces"
@@ -84,6 +84,72 @@ done
 
 command="$command]\""
 
-eval "$command | grep -E '[a-z]{5}'" # filters out non letters ( ' or - usually)
+# filters out non letters (apostrophes and hyphens usually)
+possible_words=$(eval $command | grep -E '[a-z]{5}')
 
 
+# gets the count of each letter in the possible words list
+# this is surprisingly not horribly slow.
+#letters_count=`echo "$possible_words" |grep -o -E "[a-z]" - | sort| uniq -c`
+
+letters_count=`echo $possible_words | awk '{
+    split("", seen)
+    for (i = 1; i <= NF; i++) {
+        delete seen
+        for (j = 1; j <= length($i); j++) {
+            letter = substr($i, j, 1)
+            if (!(letter in seen)) {
+                count[letter]++
+                seen[letter] = 1
+            }
+        }
+    }
+}
+END {
+    for (letter in count) {
+        print letter " " count[letter]
+    }
+}'`
+
+
+echo $letters_count
+
+
+# This implementation *is* horribly slow so I rewrote it in awk
+echo "These are the words you should try out next."
+echo "The higher the number, the greater the chance of it being right"
+
+
+
+#for word in $possible_words
+#do
+#     score="0"
+#     for letter in `echo $word | grep -o -E "[a-z]" | sort | uniq`
+#     do
+# 	score=$(( $score + `echo $letters_count | grep -o -E "$letter [0-9]+" | grep -o -E "[0-9]+"`))
+#     done
+#     echo "$score $word"
+# done | sort -n
+
+printf "%s\n%s\n" "$letters_count" "$possible_words" | awk '{
+    if (NF == 2) {
+        scores[$1] = $2
+    } else {
+      score = 0
+      word = $1
+      delete seen
+      for (i = 1; i <= length(word); i++) {
+      	  letter = substr(word, i, 1)
+	  if (!(letter in seen)) {
+	     score += scores[letter]
+	     seen[letter]
+	  }
+      }
+
+      print score " " word 
+    }
+}' | sort -n
+
+echo "Just to repeat"
+echo "These are the words you should try out next."
+echo "The higher the number, the greater the chance of it being right"

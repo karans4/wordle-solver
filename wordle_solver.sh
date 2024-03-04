@@ -43,29 +43,17 @@ fi
 printf '%s' "Enter the (yellow) letters with unknown spots, spaces in between:"
 read yellows
 
-yellows=`echo "$yellows" | tr '[:upper:]' '[:lower:]'`
-if echo $yellows | grep -E " *([a-z] )* *$"
+yellows=`echo "$yellows" | tr '[:upper:]' '[:lower:]' |  awk '{ for(i = 1; i <= NF; i++){ printf $i " "} print}'`
+#echo $yellows
+if echo $yellows | grep -E "([a-z] )*$"
 then
     :
 else
-    echo "Invalid pattern: $yellow"
+    echo "Invalid pattern: $yellows"
     echo "Must be letters seperated by spaces"
     exit 1
 fi
 
-printf '%s' "Enter the (gray) letters that are excluded, spaces in between:"
-
-read grays
-
-grays=`echo "$grays" | tr '[:upper:]' '[:lower:]'`
-if echo $grays | grep -E " *([a-z] )* *$"
-then
-    :
-else
-    echo "Invalid pattern: $grays"
-    echo "Must be letters seperated by spaces"
-    exit 1
-fi
 
 command="grep -E '^$pattern\$' $dictionary_location"
 
@@ -74,15 +62,33 @@ do
     command="$command | grep $letter"
 done
 
+printf '%s' "Enter the (gray) letters that are excluded, spaces in between:"
 
-command="$command | grep -E \"[^\\" #place holder if no letters excluded
+read grays
 
-for letter in $grays
-do
-    command="$command$letter"
-done
+grays=`echo "$grays" | tr '[:upper:]' '[:lower:]' | awk '{ for(i = 1; i <= NF; i++){ printf $i " "} print}'`
+#echo $grays
+if test "$grays" != ""
+then
+   command="$command | grep -E \"[^" 
+   if echo $grays | grep -E " *([a-z] )* *$"
+   then
+       :
+   else
+       echo "Invalid pattern: $grays"
+       echo "Must be letters seperated by spaces"
+       exit 1
+   fi
 
-command="$command]\""
+   for letter in $grays
+   do
+       command="$command$letter"
+   done
+
+   command="$command]{5}\""
+fi
+
+#echo $command
 
 # filters out non letters (apostrophes and hyphens usually)
 possible_words=$(eval $command | grep -E '[a-z]{5}')
@@ -142,7 +148,7 @@ printf "%s\n%s\n" "$letters_count" "$possible_words" | awk '{
       	  letter = substr(word, i, 1)
 	  if (!(letter in seen)) {
 	     score += scores[letter]
-	     seen[letter]
+	     seen[letter] = 1
 	  }
       }
 

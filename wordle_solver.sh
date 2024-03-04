@@ -43,8 +43,7 @@ fi
 printf '%s' "Enter the (yellow) letters with unknown spots, spaces in between:"
 read yellows
 
-yellows=`echo "$yellows" | tr '[:upper:]' '[:lower:]' |  awk '{ for(i = 1; i <= NF; i++){ if (i == NF) { printf $i " " "\n" } else { printf $i " "\
-}}}'`
+yellows=`echo "$yellows" | tr '[:upper:]' '[:lower:]' |  awk '{ for(i = 1; i <= NF; i++){ if (i == NF) { printf $i " " "\n" } else { printf $i " "}}}'`
 #echo $yellows
 if echo $yellows | grep -E "([a-z] )*$"
 then
@@ -67,8 +66,7 @@ printf '%s' "Enter the (gray) letters that are excluded, spaces in between:"
 
 read grays
 
-grays=`echo "$grays" | tr '[:upper:]' '[:lower:]' | awk '{ for(i = 1; i <= NF; i++){ if (i == NF) { printf $i " " "\n" } else { printf $i " "\
-}}}'`
+grays=`echo "$grays" | tr '[:upper:]' '[:lower:]' | awk '{ for(i = 1; i <= NF; i++){ if (i == NF) { printf $i " " "\n" } else { printf $i " "}}}'`
 #echo $grays
 if test "$grays" != ""
 then
